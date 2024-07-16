@@ -28,6 +28,7 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email }, 'your_jwt_secret', { expiresIn: '1h' });
         res.json({ message: 'Login successful', token });
+        res.json({ message: 'Login successful', user: { id: user.id, username: user.username, email: user.email }, token });
     }
     catch (error) {
         console.error('Error logging in', error);

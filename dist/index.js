@@ -5,7 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
-const user_routes_1 = __importDefault(require("./routes/user.routes")); // Asegúrate de importar el archivo correcto
+const user_routes_1 = __importDefault(require("./routes/user.routes"));
+const menu_routes_1 = __importDefault(require("./routes/menu.routes"));
 const app = (0, express_1.default)();
 // Middleware
 app.use((0, cors_1.default)({
@@ -16,6 +17,7 @@ app.use((0, cors_1.default)({
 app.use(express_1.default.json());
 // Rutas API
 app.use('/api', user_routes_1.default);
+app.use('/api', menu_routes_1.default);
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Servidor backend corriendo en http://localhost:${port}`);

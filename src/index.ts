@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import userRouter from './routes/user.routes'; // Asegúrate de importar el archivo correcto
+import userRouter from './routes/user.routes';
+import menuRoutes from './routes/menu.routes';
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 
 // Rutas API
 app.use('/api', userRouter); 
+app.use('/api', menuRoutes);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

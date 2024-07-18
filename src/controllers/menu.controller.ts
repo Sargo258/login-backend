@@ -33,16 +33,24 @@ export const updateMenuItem = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { name, imageUrl, description, price } = req.body;
-    await pool.execute(
-      'UPDATE menu SET name = ?, imageUrl = ?, description = ?, price = ? WHERE id = ?',
-      [name, imageUrl, description, price, id]
-    );
+   
+    let query = 'UPDATE menu SET name = ?, description = ?, price = ? WHERE id = ?';
+    let params = [name, description, price, id];
+
+    // Only include imageUrl in the query if it's provided
+    if (imageUrl !== undefined) {
+      query = 'UPDATE menu SET name = ?, imageUrl = ?, description = ?, price = ? WHERE id = ?';
+      params = [name, imageUrl, description, price, id];
+    }
+
+    await pool.execute(query, params);
+
     res.json({ id, name, imageUrl, description, price });
   } catch (error) {
+    console.error('Failed to update menu item:', error);
     res.status(500).json({ error: 'Failed to update menu item' });
   }
 };
-
 // Eliminar un elemento del menú
 export const deleteMenuItem = async (req: Request, res: Response) => {
   try {

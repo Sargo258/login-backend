@@ -45,7 +45,6 @@ const updateMenuItem = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         const { id } = req.params;
         const { name, imageUrl, description, price } = req.body;
-        console.log('Updating menu item:', { id, name, imageUrl, description, price });
         let query = 'UPDATE menu SET name = ?, description = ?, price = ? WHERE id = ?';
         let params = [name, description, price, id];
         // Only include imageUrl in the query if it's provided
@@ -54,7 +53,6 @@ const updateMenuItem = (req, res) => __awaiter(void 0, void 0, void 0, function*
             params = [name, imageUrl, description, price, id];
         }
         yield db_1.default.execute(query, params);
-        console.log('Menu item updated successfully:', { id, name, imageUrl, description, price });
         res.json({ id, name, imageUrl, description, price });
     }
     catch (error) {

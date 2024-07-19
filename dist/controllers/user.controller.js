@@ -14,7 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createUser = exports.getAllUsers = exports.loginUser = void 0;
 const db_1 = __importDefault(require("../db"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const JWT_SECRET = 'your_jwt_secret'; // Deberías almacenar esto en un archivo de configuración o variable de entorno
 const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     try {
@@ -23,11 +25,17 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        if (password !== user.password) {
+        const isPasswordValid = yield bcrypt_1.default.compare(password, user.password);
+        if (!isPasswordValid) {
             return res.status(401).json({ message: 'Invalid password' });
         }
-        const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email }, 'your_jwt_secret', { expiresIn: '1h' });
-        res.json({ message: 'Login successful', user: { id: user.id, username: user.username, email: user.email }, token });
+        const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
+        console.log('Token generated:', token);
+        res.json({
+            message: 'Login successful',
+            user: { id: user.id, username: user.username, email: user.email, role: user.role },
+            token
+        });
     }
     catch (error) {
         console.error('Error logging in', error);
@@ -47,9 +55,11 @@ const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.getAllUsers = getAllUsers;
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { username, email, password } = req.body;
+    const { username, email, password, role } = req.body;
+    console.log('Request Body:', req.body);
     try {
-        yield db_1.default.query('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, password]);
+        const hashedPassword = yield bcrypt_1.default.hash(password, 10);
+        yield db_1.default.query('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', [username, email, hashedPassword, role || 'user']);
         res.status(201).json({ message: 'User created successfully' });
     }
     catch (error) {

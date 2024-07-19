@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import db from '../db';
 import bcrypt from 'bcrypt';
-import  jwt  from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = 'your_jwt_secret'; // Deberías almacenar esto en un archivo de configuración o variable de entorno
 
 export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -13,13 +15,20 @@ export const loginUser = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    if (password !== user.password) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid password' });
     }
     
-    const token = jwt.sign({ id: user.id, email: user.email }, 'your_jwt_secret', { expiresIn: '1h' });
 
-    res.json({ message: 'Login successful', user: { id: user.id, username: user.username, email: user.email }, token });
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
+    console.log('Token generated:', token);
+
+    res.json({
+      message: 'Login successful',
+      user: { id: user.id, username: user.username, email: user.email, role: user.role },
+      token
+    });
 
   } catch (error) {
     console.error('Error logging in', error);
@@ -38,9 +47,11 @@ export const getAllUsers = async (req: Request, res: Response) => {
 };
 
 export const createUser = async (req: Request, res: Response) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, role } = req.body;
+  console.log('Request Body:', req.body);
   try {
-    await db.query('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, password]);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await db.query('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', [username, email, hashedPassword, role || 'user']);
     res.status(201).json({ message: 'User created successfully' });
   } catch (error) {
     console.error('Error creating user', error);

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import cors from 'cors';
 import { getAllUsers, createUser, loginUser } from '../controllers/user.controller';
+import { authenticate, authorize } from '../middleware/authorize';
 
 const router = Router();
 
@@ -10,8 +11,11 @@ const corsOptions = {
     allowedHeaders: ['Content-Type', 'Authorization']
 };
 
-router.get('/users', cors(corsOptions), getAllUsers);
-router.post('/users', cors(corsOptions), createUser);
+// Rutas públicas
 router.post('/login', cors(corsOptions), loginUser);
+router.post('/users', cors(corsOptions), createUser);
+
+// Rutas protegidas
+router.get('/users', cors(corsOptions), authenticate, authorize(['admin']), getAllUsers);
 
 export default router;

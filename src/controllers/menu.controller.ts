@@ -21,7 +21,9 @@ export const createMenuItem = async (req: Request, res: Response) => {
 // Obtener todos los elementos del menú
 export const getAllMenuItems = async (req: Request, res: Response) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM menu');
+    const isAdmin = req.query.isAdmin === 'true';
+    const query = isAdmin ? 'SELECT * FROM menu' : 'SELECT * FROM menu WHERE is_visible = TRUE';
+    const [rows] = await pool.execute(query);
     res.json(rows);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch menu items' });
@@ -32,20 +34,20 @@ export const getAllMenuItems = async (req: Request, res: Response) => {
 export const updateMenuItem = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, imageUrl, description, price } = req.body;
+    const { name, image_url, description, price, is_visible } = req.body;
    
-    let query = 'UPDATE menu SET name = ?, description = ?, price = ? WHERE id = ?';
-    let params = [name, description, price, id];
+    let query = 'UPDATE menu SET name = ?, description = ?, price = ?, is_visible = ? WHERE id = ?';
+    let params = [name, description, price, is_visible, id];
 
     // Only include imageUrl in the query if it's provided
-    if (imageUrl !== undefined) {
-      query = 'UPDATE menu SET name = ?, imageUrl = ?, description = ?, price = ? WHERE id = ?';
-      params = [name, imageUrl, description, price, id];
+    if (image_url !== undefined) {
+      query = 'UPDATE menu SET name = ?, image_url = ?, description = ?, price = ?, is_visible = ? WHERE id = ?';
+      params = [name, image_url, description, price, is_visible, id];
     }
 
     await pool.execute(query, params);
 
-    res.json({ id, name, imageUrl, description, price });
+    res.json({ id, name, image_url, description, price, is_visible });
   } catch (error) {
     console.error('Failed to update menu item:', error);
     res.status(500).json({ error: 'Failed to update menu item' });

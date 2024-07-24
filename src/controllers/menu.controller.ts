@@ -63,3 +63,34 @@ export const deleteMenuItem = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to delete menu item' });
   }
 };
+
+// Calificar un plato
+export const rateMenuItem = async (req: Request, res: Response) => {
+  const { menu_id, user_id, rating } = req.body;
+
+  try {
+    // Insertar la calificación
+    await pool.query('INSERT INTO ratings (menu_id, user_id, rating) VALUES (?, ?, ?)', [menu_id, user_id, rating]);
+
+    // Actualizar la calificación promedio del plato
+    const [result] = await pool.query('SELECT AVG(rating) AS average_rating FROM ratings WHERE menu_id = ?', [menu_id]);
+    const averageRating = (result as any)[0].average_rating;
+
+    await pool.query('UPDATE menu SET average_rating = ? WHERE id = ?', [averageRating, menu_id]);
+
+    res.status(200).json({ message: 'Rating submitted successfully' });
+  } catch (error) {
+    console.error('Error submitting rating:', error);
+    res.status(500).json({ error: 'Failed to submit rating' });
+  }
+};
+
+export const getFeaturedMenuItems = async (req: Request, res: Response) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM menu WHERE average_rating >= 4');
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch featured menu items' });
+  }
+};
+

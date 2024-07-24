@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteMenuItem = exports.updateMenuItem = exports.getAllMenuItems = exports.createMenuItem = void 0;
+exports.getFeaturedMenuItems = exports.rateMenuItem = exports.deleteMenuItem = exports.updateMenuItem = exports.getAllMenuItems = exports.createMenuItem = void 0;
 const db_1 = __importDefault(require("../db"));
 // Crear un nuevo elemento de menú
 const createMenuItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -75,3 +75,31 @@ const deleteMenuItem = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.deleteMenuItem = deleteMenuItem;
+// Calificar un plato
+const rateMenuItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { menu_id, user_id, rating } = req.body;
+    try {
+        // Insertar la calificación
+        yield db_1.default.query('INSERT INTO ratings (menu_id, user_id, rating) VALUES (?, ?, ?)', [menu_id, user_id, rating]);
+        // Actualizar la calificación promedio del plato
+        const [result] = yield db_1.default.query('SELECT AVG(rating) AS average_rating FROM ratings WHERE menu_id = ?', [menu_id]);
+        const averageRating = result[0].average_rating;
+        yield db_1.default.query('UPDATE menu SET average_rating = ? WHERE id = ?', [averageRating, menu_id]);
+        res.status(200).json({ message: 'Rating submitted successfully' });
+    }
+    catch (error) {
+        console.error('Error submitting rating:', error);
+        res.status(500).json({ error: 'Failed to submit rating' });
+    }
+});
+exports.rateMenuItem = rateMenuItem;
+const getFeaturedMenuItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const [rows] = yield db_1.default.execute('SELECT * FROM menu WHERE average_rating >= 4');
+        res.json(rows);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch featured menu items' });
+    }
+});
+exports.getFeaturedMenuItems = getFeaturedMenuItems;

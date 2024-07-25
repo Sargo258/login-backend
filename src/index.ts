@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import userRouter from './routes/user.routes';
 import menuRoutes from './routes/menu.routes';
+import commentsRoutes from './routes/comments.routes'
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 // Rutas API
 app.use('/api', userRouter); 
 app.use('/api', menuRoutes);
+app.use('/api', commentsRoutes);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

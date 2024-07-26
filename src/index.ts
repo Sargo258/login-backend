@@ -3,6 +3,7 @@ import cors from 'cors';
 import userRouter from './routes/user.routes';
 import menuRoutes from './routes/menu.routes';
 import commentsRoutes from './routes/comments.routes'
+import bookingsRoutes from './routes/bookings.routes';
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/api', userRouter); 
 app.use('/api', menuRoutes);
 app.use('/api', commentsRoutes);
+app.use('/api', bookingsRoutes)
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

@@ -9,4 +9,6 @@ router.get('/reservations', bookings_controller_1.getReservations);
 router.get('/reservations/:id', bookings_controller_1.getReservationById);
 router.put('/reservations/:id', bookings_controller_1.updateReservation);
 router.delete('/reservations/:id', bookings_controller_1.deleteReservation);
+router.get('/reservations/user/:userId', bookings_controller_1.getReservationsByUserId);
+router.patch('/reservations/:id', bookings_controller_1.softDeleteReservation);
 exports.default = router;

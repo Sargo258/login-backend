@@ -12,4 +12,12 @@ const pool = promise_1.default.createPool({
     password: '123456',
     database: 'restaurante'
 });
+pool.getConnection()
+    .then(connection => {
+    console.log('Database connected successfully');
+    connection.release();
+})
+    .catch(err => {
+    console.error('Database connection error:', err);
+});
 exports.default = pool;

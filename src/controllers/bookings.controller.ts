@@ -9,12 +9,13 @@ export const createReservation = async (req: Request, res: Response) => {
   console.log('Received data:', { name, email, phone, date, time, people, user_id });
 
   try {
+    console.log('Fetching all reservations...');
       // Verifica si hay alguna reserva activa para la misma fecha y hora
       const [conflictingReservations] = await pool.query(
           `SELECT * FROM reservations WHERE date = ? AND time = ? AND is_deleted = 0`,
           [date, time]
       );
-
+      
       // Asegúrate de que 'conflictingReservations' es un array
       const conflicting = Array.isArray(conflictingReservations) ? conflictingReservations : [];
 
@@ -38,24 +39,29 @@ export const createReservation = async (req: Request, res: Response) => {
   }
 };
 
-
-  
-  export const getReservations = async (req: Request, res: Response) => {
+  // controllers/reservation.controller.ts
+  export const getAllReservations = async (req: Request, res: Response) => {
     try {
-      const [rows] = await pool.query('SELECT * FROM reservations WHERE is_deleted = NULL');
-  
-      // Devolvemos las reservas que no están "borradas"
+      console.log('Fetching all reservations...');
+      const [rows] = await pool.query('SELECT * FROM reservations WHERE is_deleted = 0 ORDER BY user_id');
+      console.log('Reservations:', rows);
       res.json(rows);
     } catch (error) {
-      console.error('Error fetching reservations:', error);
-      res.status(500).json({ message: 'Error fetching reservations' });
+      console.error('Error fetching all reservations:', error);
+      res.status(500).json({ error: 'Error fetching all reservations' });
     }
   };
+  
+  
 
 export const getReservationById = async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id, 10);
   
     try {
+      const id = parseInt(req.params.id, 10);
+
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid ID' });
+      }
       // Realiza la consulta
       const [rows] = await pool.query<RowDataPacket[]>(
         'SELECT * FROM reservations WHERE id = ?',
@@ -117,6 +123,7 @@ export const getReservationById = async (req: Request, res: Response) => {
 
   export const getReservationsByUserId = async (req: Request, res: Response) => {
     const userId = parseInt(req.params.userId, 10);
+    console.log(`Received ID: ${userId}`);
   
     if (isNaN(userId)) {
       return res.status(400).json({ error: 'Invalid userId' });
@@ -125,7 +132,7 @@ export const getReservationById = async (req: Request, res: Response) => {
     try {
       // Consulta SQL ajustada para excluir las reservas marcadas como eliminadas
       const [rows] = await pool.query<RowDataPacket[]>(
-        'SELECT * FROM reservations WHERE user_id = ? AND is_deleted = FALSE',
+        'SELECT * FROM reservations WHERE user_id = ? AND is_deleted = 0',
         [userId]
       );
   
@@ -162,3 +169,5 @@ export const getReservationById = async (req: Request, res: Response) => {
       res.status(500).json({ error: 'Error soft-deleting reservation' });
     }
   };
+
+

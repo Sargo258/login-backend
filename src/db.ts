@@ -9,4 +9,13 @@ const pool = mysql.createPool({
   database: 'restaurante'
 });
 
+pool.getConnection()
+  .then(connection => {
+    console.log('Database connected successfully');
+    connection.release();
+  })
+  .catch(err => {
+    console.error('Database connection error:', err);
+  });
+
 export default pool;

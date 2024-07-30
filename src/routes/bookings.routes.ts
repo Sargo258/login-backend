@@ -1,23 +1,24 @@
-// routes/reservation.routes.ts
 import { Router } from 'express';
 import {
   createReservation,
-  getReservations,
   getReservationById,
   updateReservation,
   deleteReservation,
   getReservationsByUserId,
-  softDeleteReservation
+  softDeleteReservation,
+  getAllReservations
 } from '../controllers/bookings.controller';
 
 const router = Router();
 
-router.post('/reservations', createReservation);
-router.get('/reservations', getReservations);
-router.get('/reservations/:id', getReservationById);
-router.put('/reservations/:id', updateReservation);
-router.delete('/reservations/:id', deleteReservation);
-router.get('/reservations/user/:userId', getReservationsByUserId);
-router.patch('/reservations/:id', softDeleteReservation);
+// Cambia la base de la ruta para usar el prefijo /api/bookings
+router.post('/bookings', createReservation);
+router.get('/bookings/:id', getReservationById);
+router.put('/bookings/:id', updateReservation);
+router.delete('/bookings/:id', deleteReservation);
+router.get('/bookings/user/:userId', getReservationsByUserId);
+router.get('/reservations/all', getAllReservations); // Usa la ruta correcta
+router.patch('/bookings/:id', softDeleteReservation);
 
 export default router;
+

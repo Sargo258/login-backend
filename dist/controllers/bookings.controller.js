@@ -12,12 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.softDeleteReservation = exports.getReservationsByUserId = exports.deleteReservation = exports.updateReservation = exports.getReservationById = exports.getReservations = exports.createReservation = void 0;
+exports.softDeleteReservation = exports.getReservationsByUserId = exports.deleteReservation = exports.updateReservation = exports.getReservationById = exports.getAllReservations = exports.createReservation = void 0;
 const db_1 = __importDefault(require("../db"));
 const createReservation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, email, phone, date, time, people, user_id } = req.body;
     console.log('Received data:', { name, email, phone, date, time, people, user_id });
     try {
+        console.log('Fetching all reservations...');
         // Verifica si hay alguna reserva activa para la misma fecha y hora
         const [conflictingReservations] = yield db_1.default.query(`SELECT * FROM reservations WHERE date = ? AND time = ? AND is_deleted = 0`, [date, time]);
         // Asegúrate de que 'conflictingReservations' es un array
@@ -37,21 +38,26 @@ const createReservation = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.createReservation = createReservation;
-const getReservations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// controllers/reservation.controller.ts
+const getAllReservations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const [rows] = yield db_1.default.query('SELECT * FROM reservations WHERE is_deleted = NULL');
-        // Devolvemos las reservas que no están "borradas"
+        console.log('Fetching all reservations...');
+        const [rows] = yield db_1.default.query('SELECT * FROM reservations WHERE is_deleted = 0 ORDER BY user_id');
+        console.log('Reservations:', rows);
         res.json(rows);
     }
     catch (error) {
-        console.error('Error fetching reservations:', error);
-        res.status(500).json({ message: 'Error fetching reservations' });
+        console.error('Error fetching all reservations:', error);
+        res.status(500).json({ error: 'Error fetching all reservations' });
     }
 });
-exports.getReservations = getReservations;
+exports.getAllReservations = getAllReservations;
 const getReservationById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const id = parseInt(req.params.id, 10);
     try {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            return res.status(400).json({ message: 'Invalid ID' });
+        }
         // Realiza la consulta
         const [rows] = yield db_1.default.query('SELECT * FROM reservations WHERE id = ?', [id]);
         // Verifica si la consulta devolvió alguna fila
@@ -107,12 +113,13 @@ const deleteReservation = (req, res) => __awaiter(void 0, void 0, void 0, functi
 exports.deleteReservation = deleteReservation;
 const getReservationsByUserId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = parseInt(req.params.userId, 10);
+    console.log(`Received ID: ${userId}`);
     if (isNaN(userId)) {
         return res.status(400).json({ error: 'Invalid userId' });
     }
     try {
         // Consulta SQL ajustada para excluir las reservas marcadas como eliminadas
-        const [rows] = yield db_1.default.query('SELECT * FROM reservations WHERE user_id = ? AND is_deleted = FALSE', [userId]);
+        const [rows] = yield db_1.default.query('SELECT * FROM reservations WHERE user_id = ? AND is_deleted = 0', [userId]);
         res.json(rows);
     }
     catch (error) {

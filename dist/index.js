@@ -22,6 +22,11 @@ app.use('/api', user_routes_1.default);
 app.use('/api', menu_routes_1.default);
 app.use('/api', comments_routes_1.default);
 app.use('/api', bookings_routes_1.default);
+app.use('/api/reervtaions', bookings_routes_1.default);
+app.use((req, res, next) => {
+    console.log(`Received request for ${req.originalUrl}`);
+    next();
+});
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Servidor backend corriendo en http://localhost:${port}`);

@@ -12,18 +12,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteReservation = exports.updateReservation = exports.getReservationById = exports.getReservations = exports.createReservation = void 0;
+exports.softDeleteReservation = exports.getReservationsByUserId = exports.deleteReservation = exports.updateReservation = exports.getReservationById = exports.getReservations = exports.createReservation = void 0;
 const db_1 = __importDefault(require("../db"));
 const createReservation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, email, phone, date, time, people, user_id } = req.body;
     console.log('Received data:', { name, email, phone, date, time, people, user_id });
     try {
-        // Verifica si el usuario ya tiene una reserva para la misma fecha
-        const [rows] = yield db_1.default.query(`SELECT * FROM reservations WHERE user_id = ? AND date = ?`, [user_id, date]);
-        // Asegúrate de que 'rows' es un array
-        const existingReservations = Array.isArray(rows) ? rows : [];
-        if (existingReservations.length > 0) {
-            return res.status(400).json({ error: 'You already have a reservation for this date.' });
+        // Verifica si hay alguna reserva activa para la misma fecha y hora
+        const [conflictingReservations] = yield db_1.default.query(`SELECT * FROM reservations WHERE date = ? AND time = ? AND is_deleted = 0`, [date, time]);
+        // Asegúrate de que 'conflictingReservations' es un array
+        const conflicting = Array.isArray(conflictingReservations) ? conflictingReservations : [];
+        if (conflicting.length > 0) {
+            return res.status(400).json({ error: 'A reservation already exists for this date and time.' });
         }
         // Inserta la nueva reserva
         const [result] = yield db_1.default.query(`INSERT INTO reservations (name, email, phone, date, time, people, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)`, [name, email, phone, date, time, people, user_id]);
@@ -39,12 +39,13 @@ const createReservation = (req, res) => __awaiter(void 0, void 0, void 0, functi
 exports.createReservation = createReservation;
 const getReservations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const [rows] = yield db_1.default.query('SELECT * FROM reservations');
+        const [rows] = yield db_1.default.query('SELECT * FROM reservations WHERE is_deleted = NULL');
+        // Devolvemos las reservas que no están "borradas"
         res.json(rows);
     }
     catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error fetching reservations' });
+        console.error('Error fetching reservations:', error);
+        res.status(500).json({ message: 'Error fetching reservations' });
     }
 });
 exports.getReservations = getReservations;
@@ -104,3 +105,41 @@ const deleteReservation = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.deleteReservation = deleteReservation;
+const getReservationsByUserId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = parseInt(req.params.userId, 10);
+    if (isNaN(userId)) {
+        return res.status(400).json({ error: 'Invalid userId' });
+    }
+    try {
+        // Consulta SQL ajustada para excluir las reservas marcadas como eliminadas
+        const [rows] = yield db_1.default.query('SELECT * FROM reservations WHERE user_id = ? AND is_deleted = FALSE', [userId]);
+        res.json(rows);
+    }
+    catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Error fetching reservations' });
+    }
+});
+exports.getReservationsByUserId = getReservationsByUserId;
+const softDeleteReservation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const reservationId = parseInt(req.params.id, 10);
+    if (isNaN(reservationId)) {
+        return res.status(400).json({ error: 'Invalid reservation ID' });
+    }
+    try {
+        // Marca la reserva como eliminada
+        const [result] = yield db_1.default.query('UPDATE reservations SET is_deleted = 1 WHERE id = ?', [reservationId]);
+        const affectedRows = result.affectedRows;
+        if (affectedRows > 0) {
+            res.status(200).json({ message: 'Reservation soft-deleted successfully' });
+        }
+        else {
+            res.status(404).json({ error: 'Reservation not found' });
+        }
+    }
+    catch (error) {
+        console.error('Error soft-deleting reservation:', error);
+        res.status(500).json({ error: 'Error soft-deleting reservation' });
+    }
+});
+exports.softDeleteReservation = softDeleteReservation;

@@ -6,6 +6,8 @@ import {
   getReservationById,
   updateReservation,
   deleteReservation,
+  getReservationsByUserId,
+  softDeleteReservation
 } from '../controllers/bookings.controller';
 
 const router = Router();
@@ -15,5 +17,7 @@ router.get('/reservations', getReservations);
 router.get('/reservations/:id', getReservationById);
 router.put('/reservations/:id', updateReservation);
 router.delete('/reservations/:id', deleteReservation);
+router.get('/reservations/user/:userId', getReservationsByUserId);
+router.patch('/reservations/:id', softDeleteReservation);
 
 export default router;

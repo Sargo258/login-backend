@@ -39,7 +39,7 @@ const createReservation = (req, res) => __awaiter(void 0, void 0, void 0, functi
 exports.createReservation = createReservation;
 const getReservations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const [rows] = yield db_1.default.query('SELECT * FROM reservations WHERE is_deleted = FALSE');
+        const [rows] = yield db_1.default.query('SELECT * FROM reservations WHERE is_deleted = NULL');
         // Devolvemos las reservas que no están "borradas"
         res.json(rows);
     }
